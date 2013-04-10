@@ -7,7 +7,6 @@ import json
 from dbus.mainloop.glib import DBusGMainLoop
 
 counter = {}
-conversations = {}
 
 class Emitter(dbus.service.Object):
 
@@ -26,9 +25,6 @@ def notifications(account, sender, message, conversation, flags):
         counter[conversation]=1
     global e
     e.test('yellow')
-
-def windows_registry(conv):
-    conversations['%s' %conv] = conv
 
 def reseter(conv, type):
     global counter
@@ -52,9 +48,6 @@ purple = dbus.Interface(obj, "im.pidgin.purple.PurpleInterface")
 bus.add_signal_receiver(notifications,
                         dbus_interface="im.pidgin.purple.PurpleInterface",
                         signal_name="ReceivedImMsg")
-bus.add_signal_receiver(windows_registry,
-                        dbus_interface="im.pidgin.purple.PurpleInterface",
-                        signal_name="ConversationCreated")
 bus.add_signal_receiver(reseter,
                         dbus_interface="im.pidgin.purple.PurpleInterface",
                         signal_name="ConversationUpdated")
