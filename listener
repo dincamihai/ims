@@ -20,19 +20,22 @@ class Emitter(dbus.service.Object):
 
 def notifications(account, sender, message, conversation, flags):
     global counter
-    msg_hash_key = '%s-%s' %(account, sender)
-    if counter.get(msg_hash_key, None) is not None:
-        counter[msg_hash_key]+= 1
+    if counter.get(conversation, None) is not None:
+        counter[conversation]+= 1
     else:
-        counter[msg_hash_key]=1
+        counter[conversation]=1
     global e
-    e.test('%s' %reduce(lambda x, y: x+y, counter.values()))
+    e.test('yellow')
 
 def windows_registry(conv):
     conversations['%s' %conv] = conv
 
-def reseter(*args):
-    import pdb; pdb.set_trace()
+def reseter(conv, type):
+    global counter
+    counter[conv] = 0;
+    result = reduce(lambda x, y: x+y, counter.values())
+    if result == 0:
+        e.test('green')
 
 def test(*args):
     print json.dumps(args, indent=4)
@@ -52,9 +55,9 @@ bus.add_signal_receiver(notifications,
 bus.add_signal_receiver(windows_registry,
                         dbus_interface="im.pidgin.purple.PurpleInterface",
                         signal_name="ConversationCreated")
-#bus.add_signal_receiver(reseter,
-#                        dbus_interface="im.pidgin.purple.PurpleInterface",
-#                        signal_name="DisplayedImMsg")
+bus.add_signal_receiver(reseter,
+                        dbus_interface="im.pidgin.purple.PurpleInterface",
+                        signal_name="ConversationUpdated")
 
 
 mainloop = gobject.MainLoop()
