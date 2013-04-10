@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+import dbus
+import dbus.service
+import sys
+import gobject
+import json
+from dbus.mainloop.glib import DBusGMainLoop
+
+counter = {}
+conversations = {}
+
+class Emitter(dbus.service.Object):
+
+    def __init__(self, object_path):
+        dbus.service.Object.__init__(self, dbus.SessionBus(), '/org/ikook/ims')
+
+    @dbus.service.signal(dbus_interface='org.ikook.ims', rel_path_keyword='value')
+    def test(self, value):
+        pass
+
+def notifications(account, sender, message, conversation, flags):
+    global counter
+    msg_hash_key = '%s-%s' %(account, sender)
+    if counter.get(msg_hash_key, None) is not None:
+        counter[msg_hash_key]+= 1
+    else:
+        counter[msg_hash_key]=1
+    global e
+    e.test('%s' %reduce(lambda x, y: x+y, counter.values()))
+
+def windows_registry(conv):
+    conversations['%s' %conv] = conv
+
+def reseter(*args):
+    import pdb; pdb.set_trace()
+
+def test(*args):
+    print json.dumps(args, indent=4)
+
+DBusGMainLoop(set_as_default=True)
+
+bus = dbus.SessionBus()
+
+e = Emitter('/abc')
+
+obj = bus.get_object('im.pidgin.purple.PurpleService', '/im/pidgin/purple/PurpleObject')
+purple = dbus.Interface(obj, "im.pidgin.purple.PurpleInterface")
+
+bus.add_signal_receiver(notifications,
+                        dbus_interface="im.pidgin.purple.PurpleInterface",
+                        signal_name="ReceivedImMsg")
+bus.add_signal_receiver(windows_registry,
+                        dbus_interface="im.pidgin.purple.PurpleInterface",
+                        signal_name="ConversationCreated")
+#bus.add_signal_receiver(reseter,
+#                        dbus_interface="im.pidgin.purple.PurpleInterface",
+#                        signal_name="DisplayedImMsg")
+
+
+mainloop = gobject.MainLoop()
+mainloop.run()
