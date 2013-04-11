@@ -4,9 +4,13 @@ import dbus.service
 import sys
 import gobject
 import json
+import time
 from dbus.mainloop.glib import DBusGMainLoop
 
 counter = {}
+conversations = {}
+received_timestamps = {}
+timestamp = 0;
 
 class Emitter(dbus.service.Object):
 
@@ -14,8 +18,8 @@ class Emitter(dbus.service.Object):
         dbus.service.Object.__init__(self, dbus.SessionBus(), '/org/ikook/ims')
 
     @dbus.service.signal(dbus_interface='org.ikook.ims', rel_path_keyword='value')
-    def test(self, value):
-        pass
+    def test(self, value, conv):
+        received_timestamps[conv] = time.time()
 
 def notifications(account, sender, message, conversation, flags):
     global counter
@@ -24,14 +28,20 @@ def notifications(account, sender, message, conversation, flags):
     else:
         counter[conversation]=1
     global e
-    e.test('yellow')
+    print json.dumps(counter, indent=4)
+    e.test('yellow', conversation)
 
 def reseter(conv, type):
     global counter
-    counter[conv] = 0;
-    result = reduce(lambda x, y: x+y, counter.values())
+    timestamp = received_timestamps.get(conv, time.time())
+    delta = time.time() - timestamp
+    print delta
+    if delta > 1:
+        counter[conv] = 0;
+    print json.dumps(counter, indent=4)
+    result = reduce(lambda x, y: x+y, counter.values(), 0)
     if result == 0:
-        e.test('green')
+        e.test('green', conv)
 
 def test(*args):
     print json.dumps(args, indent=4)
