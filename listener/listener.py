@@ -31,7 +31,7 @@ def notifications(account, sender, message, conversation, flags):
     print json.dumps(counter, indent=4)
     e.test('yellow', conversation)
 
-def reseter(conv, type):
+def reseter(conv, type=None):
     global counter
     timestamp = received_timestamps.get(conv, time.time())
     delta = time.time() - timestamp
@@ -61,6 +61,9 @@ bus.add_signal_receiver(notifications,
 bus.add_signal_receiver(reseter,
                         dbus_interface="im.pidgin.purple.PurpleInterface",
                         signal_name="ConversationUpdated")
+bus.add_signal_receiver(reseter,
+                        dbus_interface="im.pidgin.purple.PurpleInterface",
+                        signal_name="ConversationSwitched")
 
 
 mainloop = gobject.MainLoop()
