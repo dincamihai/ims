@@ -28,20 +28,24 @@ def notifications(account, sender, message, conversation, flags):
     else:
         counter[conversation]=1
     global e
-    print json.dumps(counter, indent=4)
+    result = reduce(lambda x, y: x+y, counter.values(), 0)
+    print 'increase: ', conversation, 'result: ', result
     e.test('yellow', conversation)
 
 def reseter(conv, type=None):
     global counter
     timestamp = received_timestamps.get(conv, time.time())
     delta = time.time() - timestamp
-    print delta
-    if delta > 1:
+    if delta > 0.5:
         counter[conv] = 0;
-    print json.dumps(counter, indent=4)
     result = reduce(lambda x, y: x+y, counter.values(), 0)
     if result == 0:
-        e.test('green', conv)
+        print 'reset: ', conv, 'result: ', result
+        e.test('black', conv)
+
+def reset_on_writing(*args):
+    print 'reset on WritingImMsg'
+    reseter(args[3]);
 
 def test(*args):
     print json.dumps(args, indent=4)
@@ -64,6 +68,9 @@ bus.add_signal_receiver(reseter,
 bus.add_signal_receiver(reseter,
                         dbus_interface="im.pidgin.purple.PurpleInterface",
                         signal_name="ConversationSwitched")
+bus.add_signal_receiver(reset_on_writing,
+                        dbus_interface="im.pidgin.purple.PurpleInterface",
+                        signal_name="WritingImMsg")
 
 
 mainloop = gobject.MainLoop()
