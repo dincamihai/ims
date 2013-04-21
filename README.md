@@ -59,7 +59,7 @@ dbus.request_name("session", "org.ikook.ims")
 dbus.add_match("session", "interface='org.ikook.ims',member='test'")
 dbus.add_signal("org.ikook.ims", function (signal, value)
     if value~=false then
-        local format = "<span foreground='%s' font='20'>✉</span>"
+        local format = "<span foreground='green' font='20'>✉</span>"
         imwidget.text = string.format(format, value)
         is_blinking = true
         blinking(imwidget, .5)
