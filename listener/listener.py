@@ -30,7 +30,7 @@ def notifications(account, sender, message, conversation, flags):
     global e
     result = reduce(lambda x, y: x+y, counter.values(), 0)
     print 'increase: ', conversation, 'result: ', result
-    e.test('yellow', conversation)
+    e.test(True, conversation)
 
 def reseter(conv, type=None):
     global counter
@@ -41,10 +41,10 @@ def reseter(conv, type=None):
     result = reduce(lambda x, y: x+y, counter.values(), 0)
     if result == 0:
         print 'reset: ', conv, 'result: ', result
-        e.test('black', conv)
+        e.test(False, conv)
 
 def reset_on_writing(*args):
-    print 'reset on WritingImMsg: ', args[3]
+    print 'reset on WritingImMsg'
     reseter(args[3]);
 
 def test(*args):
