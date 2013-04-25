@@ -5,7 +5,10 @@ import sys
 import gobject
 import json
 import time
+import logging
 from dbus.mainloop.glib import DBusGMainLoop
+
+logging.basicConfig(level=logging.INFO)
 
 counter = {}
 conversations = {}
@@ -29,7 +32,7 @@ def notifications(account, sender, message, conversation, flags):
         counter[conversation]=1
     global e
     result = reduce(lambda x, y: x+y, counter.values(), 0)
-    print 'increase: ', conversation, 'result: ', result
+    logging.debug('increase: %s result: %s' %(conversation, result))
     received_timestamps[conversation] = time.time()
     e.test(result, conversation)
 
@@ -37,36 +40,36 @@ def reseter(conv, type=None):
     global counter
     timestamp = received_timestamps.get(conv, time.time())
     delta = time.time() - timestamp
-    print delta
-    print 'TIMESTAMPS', json.dumps(received_timestamps, indent=4)
+    logging.debug('delta: %s' % delta)
+    logging.debug('TIMESTAMPS: %s' % json.dumps(received_timestamps, indent=4))
     received_timestamps[conv] = time.time()
     if delta > 1 or delta < 0.0001:
         counter[conv] = 0;
     else:
-        print '[REJECTED]'
+        logging.debug('[REJECTED]')
         return
     result = reduce(lambda x, y: x+y, counter.values(), 0)
     if result == 0:
-        print '[EMPTY]'
+        logging.debug('[EMPTY]')
         e.test(0, conv)
     else:
-        print 'reset: ', conv
-        print json.dumps(counter, indent=4)
+        logging.debug('reset: %s' % conv)
+        logging.debug(json.dumps(counter, indent=4))
 
 def reset_on_writing(*args):
-    print 'WritingImMsg [RESET]'
+    logging.debug('WritingImMsg [RESET]')
     reseter(args[3]);
 
 def reset_on_switch(*args):
-    print 'ConversationSwitched [RESET]'
+    logging.debug('ConversationSwitched [RESET]')
     reseter(args[0]);
 
 def reset_on_update(*args):
-    print 'ConversationUpdated [RESET]'
+    logging.debug('ConversationUpdated [RESET]')
     reseter(args[0]);
 
 def test(*args):
-    print json.dumps(args, indent=4)
+    logging.debug(json.dumps(args, indent=4))
 
 DBusGMainLoop(set_as_default=True)
 
