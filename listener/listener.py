@@ -39,7 +39,8 @@ def reseter(conv, type=None):
     delta = time.time() - timestamp
     print delta
     print 'TIMESTAMPS', json.dumps(received_timestamps, indent=4)
-    if delta > 1:
+    received_timestamps[conv] = time.time()
+    if delta > 1 or delta < 0.0001:
         counter[conv] = 0;
     else:
         print '[REJECTED]'
