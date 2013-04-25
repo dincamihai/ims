@@ -53,9 +53,8 @@ def reseter(conv, type=None):
         print json.dumps(counter, indent=4)
 
 def reset_on_writing(*args):
-    print 'WritingImMsg'
-    #print 'WritingImMsg [RESET]'
-    #reseter(args[3]);
+    print 'WritingImMsg [RESET]'
+    reseter(args[3]);
 
 def reset_on_switch(*args):
     print 'ConversationSwitched [RESET]'
