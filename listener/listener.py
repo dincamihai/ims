@@ -8,7 +8,15 @@ import time
 import logging
 from dbus.mainloop.glib import DBusGMainLoop
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+
+DBusGMainLoop(set_as_default=True)
+
+bus = dbus.SessionBus()
+
+obj = bus.get_object('im.pidgin.purple.PurpleService', '/im/pidgin/purple/PurpleObject')
+
+purple = dbus.Interface(obj, "im.pidgin.purple.PurpleInterface")
 
 counter = {}
 conversations = {}
@@ -28,7 +36,7 @@ def notifications(account, sender, message, conversation, flags):
     global counter
     if counter.get(conversation, None) is not None:
         counter[conversation]+= 1
-    else:
+    elif conversation:
         counter[conversation]=1
     global e
     result = reduce(lambda x, y: x+y, counter.values(), 0)
@@ -56,9 +64,13 @@ def reseter(conv, type=None):
         logging.debug('reset: %s' % conv)
         logging.debug(json.dumps(counter, indent=4))
 
-def reset_on_writing(*args):
-    logging.debug('WritingImMsg [RESET]')
-    reseter(args[3]);
+def reset_on_sending(*args):
+    accounts = purple.PurpleAccountsGetAllActive()
+    if args[0] in accounts:
+        logging.debug('SendingImMsg [RESET]')
+        reseter(args[3]);
+    else:
+        logging.debug('WritingImMsg [REJECTED]')
 
 def reset_on_switch(*args):
     logging.debug('ConversationSwitched [RESET]')
@@ -71,28 +83,21 @@ def reset_on_update(*args):
 def test(*args):
     logging.debug(json.dumps(args, indent=4))
 
-DBusGMainLoop(set_as_default=True)
+if __name__ == '__main__':
+    e = Emitter('/abc')
 
-bus = dbus.SessionBus()
-
-e = Emitter('/abc')
-
-obj = bus.get_object('im.pidgin.purple.PurpleService', '/im/pidgin/purple/PurpleObject')
-purple = dbus.Interface(obj, "im.pidgin.purple.PurpleInterface")
-
-bus.add_signal_receiver(notifications,
-                        dbus_interface="im.pidgin.purple.PurpleInterface",
-                        signal_name="ReceivedImMsg")
-bus.add_signal_receiver(reset_on_update,
-                        dbus_interface="im.pidgin.purple.PurpleInterface",
-                        signal_name="ConversationUpdated")
-bus.add_signal_receiver(reset_on_switch,
-                        dbus_interface="im.pidgin.purple.PurpleInterface",
-                        signal_name="ConversationSwitched")
-bus.add_signal_receiver(reset_on_writing,
-                        dbus_interface="im.pidgin.purple.PurpleInterface",
-                        signal_name="WritingImMsg")
-
-
-mainloop = gobject.MainLoop()
-mainloop.run()
+    # REGISTER LISTENERS
+    bus.add_signal_receiver(notifications,
+                            dbus_interface="im.pidgin.purple.PurpleInterface",
+                            signal_name="ReceivedImMsg")
+    bus.add_signal_receiver(reset_on_update,
+                            dbus_interface="im.pidgin.purple.PurpleInterface",
+                            signal_name="ConversationUpdated")
+    bus.add_signal_receiver(reset_on_switch,
+                            dbus_interface="im.pidgin.purple.PurpleInterface",
+                            signal_name="ConversationSwitched")
+    bus.add_signal_receiver(reset_on_sending,
+                            dbus_interface="im.pidgin.purple.PurpleInterface",
+                            signal_name="SendingImMsg")
+    mainloop = gobject.MainLoop()
+    mainloop.run()
