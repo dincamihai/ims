@@ -65,10 +65,16 @@ def reseter(conv, type=None):
         logging.debug(json.dumps(counter, indent=4))
 
 def reset_on_sending(account, conv_name, message):
-    conv = purple.PurpleFindConversationWithAccount(1, conv_name, account)
-    if conv:
-        logging.debug('SendingImMsg [RESET]')
-        reseter(conv)
+    conv = None
+    try:
+        conv = purple.PurpleFindConversationWithAccount(1, conv_name, account)
+    except Exception as ex:
+        logging.debug(ex.message)
+    else:
+        if conv:
+            logging.debug('SendingImMsg [RESET]')
+            reseter(conv)
+
 
 def reset_on_switch(*args):
     logging.debug('ConversationSwitched [RESET]')
